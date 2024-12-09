@@ -1,4 +1,3 @@
-# volumx/tools/keepass.py
 from pykeepass import PyKeePass
 from pathlib import Path
 from cryptainer.logger import log
@@ -39,3 +38,29 @@ class KeepassManager:
         else:
             log.error(f"Password for {entry_name} not found.")
             return None
+
+if __name__ == '__main__':
+    db_path = Path("./tests/passwords.kdbx")
+    
+    keyfile_path = None  # Remplacez par un fichier clé si nécessaire
+    password = "test_password"
+
+
+    # Instancie le gestionnaire KeePass
+    manager = KeepassManager(db_path=db_path, keyfile=keyfile_path, password=password)
+
+    # Teste le stockage et la récupération de mots de passe
+    try:
+        # Stocke un mot de passe
+        manager.store_password(entry_name="Test Entry", username="test_user", password="test_pass", url="https://example.com")
+        print("Mot de passe stocké avec succès.")
+
+        # Récupère le mot de passe
+        retrieved_password = manager.retrieve_password("Test Entry")
+        if retrieved_password:
+            print(f"Mot de passe récupéré : {retrieved_password}")
+        else:
+            print("Impossible de récupérer le mot de passe.")
+
+    except Exception as e:
+        log.error(f"Erreur lors du test : {e}")
