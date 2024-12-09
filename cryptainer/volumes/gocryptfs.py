@@ -35,12 +35,15 @@ class GocryptfsTool(VolumeTool):
         os.makedirs(volume_path, exist_ok=True)
         
         # Initialize the Gocryptfs volume
-        subprocess.run(
+        process = subprocess.run(
             ["gocryptfs", "-init", "-passfile", "/dev/stdin", str(volume_path)],
             input=password,  # Pass the password through stdin
             text=True,
             check=True  # Raise an error if the command fails
         )
+
+        if process.returncode != 0:
+            raise RuntimeError("Failed to create Gocryptfs container")
         
         return password
 
@@ -62,12 +65,15 @@ class GocryptfsTool(VolumeTool):
         os.makedirs(mount_path, exist_ok=True)
 
         # Mount the Gocryptfs volume
-        subprocess.run(
+        process = subprocess.run(
             ["gocryptfs", "-passfile", "/dev/stdin", str(volume_path), str(mount_path)],
             input=password,  # Pass the password through stdin
             text=True,
             check=True  # Raise an error if the command fails
         )
+
+        if process.returncode != 0:
+            raise RuntimeError("Failed to mount Gocryptfs container")
 
     def unmount_volume(self, name: str):
         """
@@ -82,7 +88,10 @@ class GocryptfsTool(VolumeTool):
         mount_path = self.mount_dir / name  # Path to the mount directory
 
         # Unmount the Gocryptfs volume
-        subprocess.run(["fusermount", "-u", str(mount_path)], check=True)
+        process = subprocess.run(["fusermount", "-u", str(mount_path)], check=True)
+
+        if process.returncode != 0:
+            raise RuntimeError("Failed to mount Gocryptfs container")
 
         # Remove the mount directory after unmounting
         try:
@@ -98,7 +107,6 @@ if __name__ == "__main__":
     - Volume creation
     - Volume mounting
     - Volume unmounting
-    - Cleanup after testing
     """
 
     # Directories for storing volumes and mounts (used for testing)
@@ -112,43 +120,22 @@ if __name__ == "__main__":
     # Initialize the Gocryptfs tool with test directories
     gocryptfs_tool = GocryptfsTool(volume_dir, mount_dir)
 
-    # Test parameters
-    volume_name = "test_volume"  # Name of the test volume
-    password = "securepassword123"  # Test password for the volume
-
     try:
-        # Test: Create a new volume
-        print("\n--- Test: Creating a new volume ---")
-        gocryptfs_tool.create_volume(volume_name, password)
-        print(f"Volume '{volume_name}' created successfully.")
-    except FileExistsError:
-        print(f"Error: Volume '{volume_name}' already exists.")
-    except Exception as e:
-        print(f"Error during volume creation: {e}")
+        # Test creating, mounting, and unmounting a volume
+        password = "securepassword123"
+        size = "10M"
 
-    try:
-        # Test: Mount the created volume
-        print("\n--- Test: Mounting the volume ---")
-        gocryptfs_tool.mount_volume(volume_name, password)
-        print(f"Volume '{volume_name}' mounted successfully.")
-    except Exception as e:
-        print(f"Error during volume mounting: {e}")
+        print("Creating volume...")
+        # gocryptfs_tool.create_volume("test_volume_001", password)
+        # gocryptfs_tool.create_volume("test_volume_002", password, size)
 
-    try:
-        # Test: Unmount the mounted volume
-        print("\n--- Test: Unmounting the volume ---")
-        gocryptfs_tool.unmount_volume(volume_name)
-        print(f"Volume '{volume_name}' unmounted successfully.")
-    except Exception as e:
-        print(f"Error during volume unmounting: {e}")
+        print("Mounting volume...")
+        gocryptfs_tool.mount_volume("test_volume_001", password)
+        gocryptfs_tool.mount_volume("test_volume_002", password)
+        
+        print("Unmounting volume...")
+        gocryptfs_tool.unmount_volume("test_volume_001")
+        gocryptfs_tool.unmount_volume("test_volume_002")
 
-    # Cleanup: Delete the test volume after unmounting
-    # print("\n--- Cleanup ---")
-    # try:
-    #     test_volume_path = volume_dir / volume_name
-    #     print(test_volume_path)
-    #     if test_volume_path.exists():
-    #         os.rmdir(test_volume_path)  # Remove the test volume directory
-    #         print(f"Volume '{volume_name}' deleted successfully.")
-    # except Exception as e:
-    #     print(f"Error during volume deletion: {e}")
+    except Exception as e:
+        print(e)
