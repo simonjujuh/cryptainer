@@ -13,8 +13,7 @@ class KeepassManager:
         try:
             self.kp = PyKeePass(self.db_path, password=self.password, keyfile=self.keyfile)
         except Exception as e:
-            log.error(f"Failed to open Keepass database: {e}")
-            raise
+            raise Exception(f"Failed to open Keepass database: {e}")
 
     def store_password(self, entry_name: str, username: str, password: str = None, url: str = None):
         if not self.kp:
@@ -36,8 +35,7 @@ class KeepassManager:
         if entry:
             return entry.password
         else:
-            log.error(f"Password for {entry_name} not found.")
-            return None
+            raise (f"Password for {entry_name} not found")
 
 if __name__ == '__main__':
     db_path = Path("./tests/passwords.kdbx")
