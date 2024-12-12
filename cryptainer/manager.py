@@ -4,7 +4,7 @@ from cryptainer.logger import log
 from cryptainer.config import DEFAULT_CONFIG_DIR
 from pathlib import Path
 import subprocess
-import json
+import json, os
 
 
 class VolumeManager:
@@ -39,7 +39,6 @@ class VolumeManager:
         self.meta_file = self.VOLUMES_META_FILE
         self.metadata = self._load_metadata()
 
-
     def _run_mount_cmd(self):
         """
         """
@@ -50,7 +49,7 @@ class VolumeManager:
                 stderr=subprocess.PIPE,
                 text=True,
             )
-            return result
+            return result.stdout
         except Exception as e:
             log.error(f"Error checking mount status")
 
@@ -70,33 +69,6 @@ class VolumeManager:
         with open(self.meta_file, "w") as f:
             json.dump(self.metadata, f, indent=4)
 
-    def register_volume(self, name: str, volume_type: str, path):
-        """
-        Register a new volume in the metadata.
-
-        Args:
-            name (str): Name of the volume.
-            volume_type (str): Type of the volume (e.g., "veracrypt", "gocryptfs").
-            path (str): Path to the volume file.
-        """
-        self.metadata[name] = {
-            "type": volume_type,
-            "path": path.resolve(),
-        }
-        self._save_metadata()
-
-    def get_volume_info(self, name: str):
-        """
-        Get metadata information for a specific volume.
-
-        Args:
-            name (str): Name of the volume.
-
-        Returns:
-            dict: Metadata for the volume, or None if not found.
-        """
-        return self.metadata.get(name)
-
     def list_volumes(self):
         """
         List all volumes present in the volume directory, including their type and mount status.
@@ -106,7 +78,9 @@ class VolumeManager:
         log.info("Available volumes:")
         
         # Iterate over all items in the volume directory
-        for item in self.volume_dir.iterdir():
+        # by stat creation date : sorted(self.volume_dir.iterdir(), key=lambda x: x.stat().st_ctime)
+        # by name : sorted(self.volume_dir.iterdir(), key=lambda x: x.name.lower())
+        for item in sorted(self.volume_dir.iterdir(), key=lambda x: x.stat().st_ctime):
             # Retrieve volume information from the metadata
             volume_info = self.metadata.get(item.name)
 
@@ -129,8 +103,6 @@ class VolumeManager:
                 # If not mounted, display "not mounted"
                 log.info(f"{item.name:30} [{volume_type}]")
 
-
-
     def is_mounted(self, name: str):
         """
         Check if a volume is mounted and return its mount path if it is.
@@ -144,7 +116,7 @@ class VolumeManager:
         mount_path = self.mount_dir / name
 
         # Vérification dans la sortie de la commande mount
-        if str(mount_path) in self._mount_cmd_result.stdout:
+        if str(mount_path) in self._mount_cmd_result:
             return True, str(mount_path)
 
         return False, ""
@@ -160,7 +132,7 @@ class VolumeManager:
         """
         pass
         # return [volume['name'] for volume in self.volumes if volume.get('mount_path') is None]
-
+    
     def create_volume(self, volume_type: str, name: str, password: str, size: str = None, auto_mount: bool = False):
         """
         Create a new volume and add its metadata to 'meta.json'.
@@ -175,30 +147,48 @@ class VolumeManager:
         Raises:
             Exception: If the volume creation fails.
         """
-        pass
-        # if volume_type not in self.tools:
-        #     raise(f"Unsupported volume type: {volume_type}")
+        # Check if the provided volume type is supported
+        if volume_type not in self.tools:
+            raise ValueError(f"Unsupported volume type: {volume_type}")
 
-        # # volumes with same name but different extensions are not allowed
-        # for extension in self.extensions.values():
-        #     volume_path = self.volume_dir / f"{name}{extension}"
+        # Check if the volume with the same name already exists in the volume directory
+        volume_path = self.volume_dir / name
+        if volume_path.exists():
+            raise FileExistsError(f"A volume with the name '{name}' already exists in the volume directory.")
+
+        # Select the tool based on the volume type
+        tool = self.tools[volume_type]
+
+        try:
+            # Create the volume using the appropriate tool
+            log.info(f"Creating {volume_type.capitalize()} volume '{name}'...")
+
+            # If the volume is VeraCrypt, we need to pass the size argument
+            if volume_type == "veracrypt" and size is None:
+                raise ValueError("Size is required for VeraCrypt volumes.")
             
-        #     if volume_path.exists() and extension == self.extensions[volume_type]:
-        #         raise FileExistsError(f"{volume_path} already exists")
-        #     elif volume_path.exists():
-        #         raise FileExistsError(f"{volume_path} with extension {extension} already exists")
-        
-        # # Create the volume
-        # tool = self.tools[volume_type]
-        # try:
-        #     tool.create_volume(name, password, size)
+            # Create the volume
+            tool.create_volume(name, password, size)
 
-        #     log.info(f"{volume_type.capitalize()} volume '{name}' created successfully with password: {password}")
-        #     if auto_mount:
-        #         tool.mount_volume(name, password)
-        #         log.info(f"Volume '{name}' mounted successfully.")
-        # except Exception as e:
-        #     log.error(f"Error creating volume '{name}': {e}")
+            # After creation, log success
+            log.success(f"{volume_type.capitalize()} volume '{name}' created successfully with password: {password}")
+
+            # Add metadata for the created volume (optional: for your 'meta.json' or similar storage)
+            self.metadata[name] = {"type": volume_type, "path": str(volume_path.resolve())}
+            self._save_metadata()
+
+            # If auto_mount is enabled, attempt to mount the volume
+            if auto_mount:
+                log.info(f"Attempting to mount '{name}' after creation...")
+                tool.mount_volume(name, password)
+                log.info(f"Volume '{name}' mounted successfully.")
+
+        except Exception as e:
+            # Log any errors during volume creation or mounting
+            log.error(f"Error creating volume '{name}': {str(e)}")
+            raise e
+        
+        self._mount_cmd_result = self._run_mount_cmd()
 
     def mount_volume(self, name: str, password: str):
         """
@@ -211,21 +201,34 @@ class VolumeManager:
         Raises:
             Exception: If the volume mounting fails.
         """
-        # récupère le nom du volume
-        # identifie le type de conteneur
-        # configure le tool associé au type de conteneur
-        # appel la methode unmount du tool
-        pass
-        # if volume_type == "unknown":
-        #     log.error(f"Volume type for '{name}' is unknown. Cannot mount.")
-        #     return
+        # Step 1: Retrieve volume metadata
+        volume_info = self.metadata.get(name)
+        if not volume_info:
+            log.error(f"Volume '{name}' not found in metadata. Cannot mount.")
+            return
 
-        # tool = self.tools[volume_type]
-        # try:
-        #     tool.mount_volume(name, password)
-        #     log.info(f"Volume '{name}' mounted successfully.")
-        # except Exception as e:
-        #     log.error(f"Error mounting volume '{name}': {e}")
+        volume_type = volume_info.get("type", "unknown")
+        if volume_type == "unknown":
+            log.error(f"Volume type for '{name}' is unknown. Cannot mount.")
+            return
+
+        # Step 2: Configure the tool based on the volume type
+        tool = self.tools.get(volume_type)
+        if not tool:
+            log.error(f"No tool available for volume type '{volume_type}'. Cannot mount.")
+            return
+
+        # Step 3: Call the mount method of the tool
+        try:
+            mount_path = self.mount_dir / name  # Mount point
+            mount_path.mkdir(parents=True, exist_ok=True)  # Ensure mount point exists
+
+            tool.mount_volume(name=name, password=password)
+            log.info(f"Volume '{name}' of type '{volume_type}' mounted successfully at '{mount_path}'.")
+        except Exception as e:
+            log.error(f"Error mounting volume '{name}': {e}")
+        
+        self._mount_cmd_result = self._run_mount_cmd()
 
     def unmount_volume(self, name: str):
         """
@@ -237,26 +240,35 @@ class VolumeManager:
         Raises:
             Exception: If the unmounting process fails.
         """
-        # récupère le nom du volume
-        # identifie le type de conteneur
-        # configure le tool associé au type de conteneur
-        # appel la methode unmount du tool
-        pass
-        # volume_type = self.detect_volume_type(name)
-        # if volume_type == "unknown":
-        #     log.error(f"Volume type for '{name}' is unknown. Cannot unmount.")
-        #     return
+        # Step 1: Retrieve volume metadata
+        volume_info = self.metadata.get(name)
+        if not volume_info:
+            log.error(f"Volume '{name}' not found in metadata. Cannot unmount.")
+            return
 
-        # tool = self.tools[volume_type]
-        # try:
-        #     tool.unmount_volume(name)
-        #     mount_path = self.mount_dir / name
-        #     if mount_path.exists():
-        #         os.rmdir(mount_path)  # Remove the empty mount directory
-        #     log.info(f"Volume '{name}' unmounted and mount directory removed.")
-        # except Exception as e:
-        #     log.error(f"Error unmounting volume '{name}': {e}")
+        volume_type = volume_info.get("type", "unknown")
+        if volume_type == "unknown":
+            log.error(f"Volume type for '{name}' is unknown. Cannot unmount.")
+            return
 
+        # Step 2: Configure the tool based on the volume type
+        tool = self.tools.get(volume_type)
+        if not tool:
+            log.error(f"No tool available for volume type '{volume_type}'. Cannot unmount.")
+            return
+
+        # Step 3: Call the unmount method of the tool
+        try:
+            mount_path = self.mount_dir / name  # Mount point
+
+            tool.unmount_volume(name=name)
+            if mount_path.exists() and mount_path.is_dir():
+                os.rmdir(mount_path)  # Remove the empty mount directory
+            log.info(f"Volume '{name}' of type '{volume_type}' unmounted and mount directory removed.")
+        except Exception as e:
+            log.error(f"Error unmounting volume '{name}': {e}")
+        
+        self._mount_cmd_result = self._run_mount_cmd()
 
 # Example usage
 if __name__ == "__main__":
@@ -273,12 +285,19 @@ if __name__ == "__main__":
     # volume_manager.create_volume("veracrypt", "test_02", "password1234", "100M")
     # volume_manager.create_volume("gocryptfs", "test_03", "password123")
 
+    # # List volumes
+    # volume_manager.list_volumes()
+
     # # Mount a volume
-    # volume_manager.mount_volume("gocryptfs_test_01", "password123")
+    # volume_manager.mount_volume("test_03", "password123")
 
-    # List volumes
-    volume_manager.list_volumes()
+    # # List volumes
+    # volume_manager.list_volumes()
 
-    # Unmount a volume
-    # volume_manager.unmount_volume("gocryptfs_test_01")
+    # # Unmount a volume
+    # volume_manager.unmount_volume("test_03")
+
+    # # List volumes
+    # volume_manager.list_volumes()
+
     # volume_manager.list_volumes()

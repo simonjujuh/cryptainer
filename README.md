@@ -8,8 +8,9 @@ A CLI wrapper to manage encrypted volumes from different tools.
     - [ ] Hide veracrypt output from subprocess calls
     - [ ] Prompt the sudo password when needed
 - [x] Implement the gocryptfs container module
-- [ ] Find a reliable way to detect the volume TYPE
-- [ ] Add support for keepass database
-    - [ ] If keepass i set in the config, then keepass can't be user
+- [x] Find a reliable way to detect the volume TYPE
+- [x] Add support for keepass database
+    - [ ] If keepass is set in the config, then keepass can't be used
 - [ ] Add pruning feature
 - [ ] Add cleaning feature
+- [ ] Config: add the possibility to add your own keepass directory
