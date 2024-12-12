@@ -99,24 +99,35 @@ class VolumeManager:
 
     def list_volumes(self):
         """
-        List all volumes present in the volume directory, along with their type and mount status.
+        List all volumes present in the volume directory, including their type and mount status.
+        This method iterates over the volume directory and retrieves information about each volume 
+        from the metadata file. It logs the volume name, type, and mount status (if mounted or not).
         """
         log.info("Available volumes:")
+        
+        # Iterate over all items in the volume directory
         for item in self.volume_dir.iterdir():
-            # Retrieve volume info from metadata
+            # Retrieve volume information from the metadata
             volume_info = self.metadata.get(item.name)
-            if not volume_info:
+
+            # Check if volume information is available, else log a warning
+            if volume_info is None:
                 volume_type = "unknown"
-                log.warning(f"Can not get info for volume {volume_info}")
+                log.warning(f"Cannot retrieve info for volume: {item.name}")
             else:
                 volume_type = volume_info.get("type", "unknown")
-                is_mounted, path = self.is_mounted(item.name)
-                path = Path(path)
 
+            # Check if the volume is mounted and get the mount path
+            is_mounted, mount_path = self.is_mounted(item.name)
+            mount_path = Path(mount_path)  # Ensure the mount path is a Path object
+
+            # Format and log the volume status
             if is_mounted:
-                log.success(f"{item.name:30} [{volume_type}, mounted:{path.resolve()}]")
+                # If mounted, display the full path
+                log.success(f"{item.name:30} [{volume_type}] :: {mount_path.resolve()} ")
             else:
-                log.info(f"{item.name:30} [{volume_type}")
+                # If not mounted, display "not mounted"
+                log.info(f"{item.name:30} [{volume_type}]")
 
 
 
