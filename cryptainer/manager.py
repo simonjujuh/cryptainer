@@ -154,7 +154,7 @@ class VolumeManager:
         # Check if the volume with the same name already exists in the volume directory
         volume_path = self.volume_dir / name
         if volume_path.exists():
-            raise FileExistsError(f"A volume with the name '{name}' already exists in the volume directory.")
+            raise FileExistsError(f"A volume with the name '{name}' already exists in the volume directory")
 
         # Select the tool based on the volume type
         tool = self.tools[volume_type]
@@ -165,7 +165,7 @@ class VolumeManager:
 
             # If the volume is VeraCrypt, we need to pass the size argument
             if volume_type == "veracrypt" and size is None:
-                raise ValueError("Size is required for VeraCrypt volumes.")
+                raise ValueError("Size is required for VeraCrypt volumes")
             
             # Create the volume
             tool.create_volume(name, password, size)
@@ -180,8 +180,7 @@ class VolumeManager:
             # If auto_mount is enabled, attempt to mount the volume
             if auto_mount:
                 log.info(f"Attempting to mount '{name}' after creation...")
-                tool.mount_volume(name, password)
-                log.info(f"Volume '{name}' mounted successfully.")
+                self.mount_volume(name, password)
 
         except Exception as e:
             # Log any errors during volume creation or mounting
@@ -224,7 +223,7 @@ class VolumeManager:
             mount_path.mkdir(parents=True, exist_ok=True)  # Ensure mount point exists
 
             tool.mount_volume(name=name, password=password)
-            log.info(f"Volume '{name}' of type '{volume_type}' mounted successfully at '{mount_path}'.")
+            log.success(f"Volume '{name}' of type '{volume_type}' mounted successfully at '{mount_path}'")
         except Exception as e:
             log.error(f"Error mounting volume '{name}': {e}")
         
@@ -284,6 +283,7 @@ if __name__ == "__main__":
     # volume_manager.create_volume("veracrypt", "test_01", "password123", "100M")
     # volume_manager.create_volume("veracrypt", "test_02", "password1234", "100M")
     # volume_manager.create_volume("gocryptfs", "test_03", "password123")
+
 
     # # List volumes
     # volume_manager.list_volumes()

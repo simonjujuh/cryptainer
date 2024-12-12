@@ -36,7 +36,7 @@ class GocryptfsTool(VolumeTool):
         
         # Initialize the Gocryptfs volume
         process = subprocess.run(
-            ["gocryptfs", "-init", "-passfile", "/dev/stdin", str(volume_path)],
+            ["gocryptfs", "-q", "-init", "-passfile", "/dev/stdin", str(volume_path)],
             input=password,  # Pass the password through stdin
             text=True,
             check=True  # Raise an error if the command fails
@@ -66,7 +66,7 @@ class GocryptfsTool(VolumeTool):
 
         # Mount the Gocryptfs volume
         process = subprocess.run(
-            ["gocryptfs", "-passfile", "/dev/stdin", str(volume_path), str(mount_path)],
+            ["gocryptfs", "-q", "-passfile", "/dev/stdin", str(volume_path), str(mount_path)],
             input=password,  # Pass the password through stdin
             text=True,
             check=True  # Raise an error if the command fails
