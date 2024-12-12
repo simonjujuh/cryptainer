@@ -26,7 +26,7 @@ class VeraCryptTool(VolumeTool):
             FileExistsError: If a volume with the same name already exists.
             RuntimeError: If the VeraCrypt process fails.
         """
-        volume_path = self.volume_dir / f"{name}.hc"
+        volume_path = self.volume_dir / f"{name}"
 
         # Check if the volume already exists
         if volume_path.exists():
@@ -61,8 +61,8 @@ class VeraCryptTool(VolumeTool):
         Raises:
             Exception: If the VeraCrypt process fails, including error output.
         """
-        volume_path = self.volume_dir / f"{name}.hc"  # Path to the volume file
-        mount_path = self.mount_dir / f"{name}.hc"  # Directory where the volume will be mounted
+        volume_path = self.volume_dir / f"{name}"  # Path to the volume file
+        mount_path = self.mount_dir / f"{name}"  # Directory where the volume will be mounted
 
         # Ensure the mount directory exists
         os.makedirs(mount_path, exist_ok=True)
@@ -89,8 +89,8 @@ class VeraCryptTool(VolumeTool):
         Raises:
             Exception: If the VeraCrypt process fails, including error output.
         """
-        mount_path = self.mount_dir / f"{name}.hc"  # Path to the mount directory
-        volume_path = self.volume_dir / f"{name}.hc"  # Path to the volume file
+        mount_path = self.mount_dir / f"{name}"  # Path to the mount directory
+        volume_path = self.volume_dir / f"{name}"  # Path to the volume file
 
         # Run the VeraCrypt command to unmount the volume, capturing stdout and stderr
         process = subprocess.run(
@@ -134,16 +134,16 @@ if __name__ == "__main__":
         size = "10M"
 
         # print("Creating volume...")
-        # veracrypt_tool.create_volume("test_volume_001", password, size)
+        # veracrypt_tool.create_volume("test_volume_002", password, size)
         # veracrypt_tool.create_volume("test_volume_002", password, size)
 
         # print("Mounting volume...")
         # veracrypt_tool.mount_volume("test_volume_001", password)
-        # veracrypt_tool.mount_volume("test_volume_002", password)
+        veracrypt_tool.mount_volume("test_volume_002", password)
         
         # print("Unmounting volume...")
         # veracrypt_tool.unmount_volume("test_volume_001")
-        veracrypt_tool.unmount_volume("test_volume_002")
+        # veracrypt_tool.unmount_volume("test_volume_002")
 
     except Exception as e:
         log.error(e)

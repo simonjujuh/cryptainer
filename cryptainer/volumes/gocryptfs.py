@@ -25,7 +25,7 @@ class GocryptfsTool(VolumeTool):
         Raises:
             FileExistsError: If a volume with the same name already exists.
         """
-        volume_path = self.volume_dir / f"{name}.gc"  # Path to the volume directory
+        volume_path = self.volume_dir / f"{name}"  # Path to the volume directory
 
         # Check if the volume already exists
         if volume_path.exists():
@@ -58,8 +58,8 @@ class GocryptfsTool(VolumeTool):
         Raises:
             Exception: If the Gocryptfs process fails.
         """
-        volume_path = self.volume_dir / f"{name}.gc"  # Path to the encrypted volume
-        mount_path = self.mount_dir /  f"{name}.gc"  # Directory to mount the volume
+        volume_path = self.volume_dir / f"{name}"  # Path to the encrypted volume
+        mount_path = self.mount_dir /  f"{name}"  # Directory to mount the volume
 
         # Ensure the mount directory exists
         os.makedirs(mount_path, exist_ok=True)
@@ -85,7 +85,7 @@ class GocryptfsTool(VolumeTool):
         Raises:
             Exception: If the unmount process fails.
         """
-        mount_path = self.mount_dir / f"{name}.gc"  # Path to the mount directory
+        mount_path = self.mount_dir / f"{name}"  # Path to the mount directory
 
         # Unmount the Gocryptfs volume
         process = subprocess.run(["fusermount", "-u", str(mount_path)], check=True)
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         size = "10M"
 
         # print("Creating volume...")
-        # gocryptfs_tool.create_volume("test_volume_001", password)
+        gocryptfs_tool.create_volume("test_volume_001", password)
         # gocryptfs_tool.create_volume("test_volume_002", password, size)
 
         # print("Mounting volume...")
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         
         # print("Unmounting volume...")
         # gocryptfs_tool.unmount_volume("test_volume_001")
-        gocryptfs_tool.unmount_volume("test_volume_002")
+        # gocryptfs_tool.unmount_volume("test_volume_002")
 
     except Exception as e:
         print(e)
