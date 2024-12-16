@@ -87,7 +87,6 @@ class VolumeManager:
             # Check if volume information is available, else log a warning
             if volume_info is None:
                 volume_type = "unknown"
-                log.warning(f"Cannot retrieve info for volume: {item.name}")
             else:
                 volume_type = volume_info.get("type", "unknown")
 
@@ -101,7 +100,10 @@ class VolumeManager:
                 log.success(f"{item.name:30} [{volume_type}] :: {mount_path.resolve()} ")
             else:
                 # If not mounted, display "not mounted"
-                log.info(f"{item.name:30} [{volume_type}]")
+                if volume_type == "unknown":
+                    pass
+                else:
+                    log.info(f"{item.name:30} [{volume_type}]") 
 
     def is_mounted(self, name: str):
         """
@@ -153,8 +155,6 @@ class VolumeManager:
 
         # Check if the volume with the same name already exists in the volume directory
         volume_path = self.volume_dir / name
-        if volume_path.exists():
-            raise FileExistsError(f"A volume with the name '{name}' already exists in the volume directory")
 
         # Select the tool based on the volume type
         tool = self.tools[volume_type]
@@ -184,8 +184,12 @@ class VolumeManager:
 
         except Exception as e:
             # Log any errors during volume creation or mounting
-            log.error(f"Error creating volume '{name}': {str(e)}")
-            raise e
+            # use veracrypt stdout
+            if volume_type == 'veracrypt':
+                pass
+            else:
+                log.error(e)
+
         
         self._mount_cmd_result = self._run_mount_cmd()
 
@@ -225,7 +229,11 @@ class VolumeManager:
             tool.mount_volume(name=name, password=password)
             log.success(f"Volume '{name}' of type '{volume_type}' mounted successfully at '{mount_path}'")
         except Exception as e:
-            log.error(f"Error mounting volume '{name}': {e}")
+            # use veracrypt stdout
+            if volume_type == 'veracrypt':
+                pass
+            else:
+                log.error(e)
         
         self._mount_cmd_result = self._run_mount_cmd()
 
@@ -265,7 +273,12 @@ class VolumeManager:
                 os.rmdir(mount_path)  # Remove the empty mount directory
             log.info(f"Volume '{name}' of type '{volume_type}' unmounted and mount directory removed.")
         except Exception as e:
-            log.error(f"Error unmounting volume '{name}': {e}")
+            # use veracrypt stdout
+            if volume_type == 'veracrypt':
+                pass
+            else:
+                log.error(e)
+
         
         self._mount_cmd_result = self._run_mount_cmd()
 
