@@ -1,6 +1,6 @@
 import logging
 from colorama import Fore, Style
-from datetime import datetime
+from getpass import getpass
 
 class CustomLogger:
     """
@@ -69,6 +69,10 @@ class CustomLogger:
         if self.debug_mode:
             self.logger.debug(Fore.MAGENTA + "[DEBUG] " + Style.RESET_ALL + str(message))
         # Debug messages are suppressed when debug mode is off.
+
+    def prompt(self, message: str):
+        password = getpass(Fore.YELLOW + "[>] " + Style.RESET_ALL + str(message))
+        return password
 
 # Instantiate the logger
 log = CustomLogger("VolumX")
