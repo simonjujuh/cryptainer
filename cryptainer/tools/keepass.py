@@ -3,6 +3,7 @@ from pathlib import Path
 from cryptainer.logger import log
 
 class KeepassManager:
+
     def __init__(self, db_path: str, keyfile: str, password: str = None):
         self.db_path = Path(db_path)
         self.keyfile = Path(keyfile) if keyfile else None
@@ -18,10 +19,15 @@ class KeepassManager:
     def store_password(self, entry_name: str, username: str, password: str = None, url: str = None):
         if not self.kp:
             self.open_database()
+        
         group = self.kp.find_groups(name="Encrypted volumes", first=True)
+
         if not group:
             group = self.kp.add_group(self.kp.root_group, "Encrypted volumes")
+            self.kp.save()
+
         entry = self.kp.find_entries(title=entry_name, first=True)
+        print(self.kp.save())
         if entry:
             entry.password = password
         else:
