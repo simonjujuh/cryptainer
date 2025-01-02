@@ -23,7 +23,7 @@ def print_warning(message: str):
     """
     Display a warning message with a [!] prefix.
     """
-    print(Fore.MAGENTA + Style.BRIGHT + "[!] " + Style.RESET_ALL + str(message))
+    print(Fore.YELLOW + Style.BRIGHT + "[!] " + Style.RESET_ALL + str(message))
 
 def print_debug(message: str, debug_mode: bool):
     """
@@ -36,7 +36,7 @@ def prompt(message: str):
     """
     Prompt the user for input with a [>] prefix.
     """
-    return getpass(Fore.YELLOW + Style.BRIGHT + "[*] " + Style.RESET_ALL + str(message))
+    return getpass(Fore.MAGENTA + Style.BRIGHT + "[*] " + Style.RESET_ALL + str(message))
 
 # Example usage
 if __name__ == "__main__":

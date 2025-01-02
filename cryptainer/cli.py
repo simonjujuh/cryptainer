@@ -46,16 +46,16 @@ def main():
     # Command: mount
     parser_mount = subparsers.add_parser("mount", help="Mount an encrypted volume")
     if completion:
-        parser_mount.add_argument("name", help="Encrypted volume name", choices=controller.get_unmounted_volumes())
+        parser_mount.add_argument("name", type=str, nargs='+', help="Encrypted volume name", choices=controller.get_unmounted_volumes())
     else:
-        parser_mount.add_argument("name", help="Encrypted volume name")
+        parser_mount.add_argument("name", type=str, nargs='+', help="Encrypted volume name")
 
     # Command: unmount
     parser_unmount = subparsers.add_parser("unmount", help="Unmount an encrypted volume")
     if completion:
-        parser_unmount.add_argument("name", help="Target volume name", choices=controller.get_mounted_volumes())
+        parser_unmount.add_argument("name", type=str, nargs='+', help="Target volume name", choices=controller.get_mounted_volumes())
     else:
-        parser_unmount.add_argument("name", help="Target volume name")
+        parser_unmount.add_argument("name", type=str, nargs='+', help="Target volume name")
 
     # Parse arguments
     argcomplete.autocomplete(parser)
@@ -68,9 +68,11 @@ def main():
     if args.command == 'create':
         controller.create_volume(args.type, args.name, args.size, args.auto_mount)
     elif args.command == 'mount':
-        controller.mount_volume(args.name)
+        for name in args.name:
+            controller.mount_volume(name)
     elif args.command == 'unmount':
-        controller.unmount_volume(args.name)
+        for name in args.name:
+            controller.unmount_volume(name)
     elif args.command == 'list':
         controller.list_volumes(args.show_unknown)
     else:

@@ -100,7 +100,7 @@ class VolumeController:
 
         volume_type = self.detect_volume_type(name)
         if volume_type == "unknown":
-            print_error(f"Volume type for '{name}' is unknown. Cannot mount.")
+            print_error(f"Volume type for '{name}' is unknown. Cannot mount")
             return
 
         try:
@@ -110,7 +110,7 @@ class VolumeController:
             if password:
                 volume_password = password
             else:
-                volume_password = generate_password(30, use_special=False)  # Generate a random password
+                volume_password = prompt(f"Enter password for {name}: ")
             
             mount_path = self.mount_dir / name
             volume_path = self.volume_dir / name
@@ -131,7 +131,7 @@ class VolumeController:
 
         volume_type = self.detect_volume_type(name)
         if volume_type == "unknown":
-            print_error(f"Volume type for '{name}' is unknown. Cannot unmount.")
+            print_error(f"Volume type for '{name}' is unknown. Cannot unmount")
             return
 
         try:
@@ -139,7 +139,7 @@ class VolumeController:
             mount_path = self.mount_dir / name
 
             tool.unmount_volume(mount_path)
-            print_success(f"Volume '{name}' unmounted and mount directory removed.")
+            print_success(f"Volume '{name}' unmounted and mount directory removed")
         except Exception as e:
             print_error(e)
 
