@@ -8,7 +8,7 @@ from cryptainer.password import generate_password
 from cryptainer.volumes.gocryptfs import GocryptfsTool
 
 # Supported volume types
-supported_volume_types = ['gocryptfs']
+supported_volume_types = ['gocryptfs', 'veracrypt']
 # Enable debug mode
 
 def main():
@@ -66,6 +66,9 @@ def main():
         sys.exit(1)
 
     if args.command == 'create':
+        if args.type == 'veracrypt' and not args.size:
+            print_error("--size option is required when using veracrypt containers")
+            return
         controller.create_volume(args.type, args.name, args.size, args.auto_mount)
     elif args.command == 'mount':
         for name in args.name:

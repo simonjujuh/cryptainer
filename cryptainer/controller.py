@@ -1,10 +1,13 @@
 from cryptainer.volumes.gocryptfs import GocryptfsTool
+from cryptainer.volumes.veracrypt import VeraCryptTool
 from cryptainer.log import *
 from cryptainer.password import generate_password
 from cryptainer.config import DEFAULT_CONFIG_DIR
 from pathlib import Path
 from tabulate import tabulate
 import subprocess, os
+
+debug_mode = True
 
 class VolumeController:
     """
@@ -28,6 +31,7 @@ class VolumeController:
         # Initialize volume tools
         self.tools = {
             "gocryptfs": GocryptfsTool(),
+            "veracrypt": VeraCryptTool()
         }
 
     def list_volumes(self, show_unknown_fs: bool = False):
@@ -66,8 +70,14 @@ class VolumeController:
             password (str, optional): The password for the volume. If None, a random password is generated.
             size (str, optional): Size of the volume (if applicable to the tool).
         """
+        # add veracrypt extension for detection
+        if volume_type == 'veracrypt'and not str(name).endswith('.hc'):
+            name = f"{name}.hc"
+
         print_info(f"Creating {volume_type} volume: {name}")
 
+        volume_path = self.volume_dir / name
+        
         try:
             tool = self.tools[volume_type]
 
@@ -76,8 +86,6 @@ class VolumeController:
                 volume_password = password
             else:
                 volume_password = generate_password(30, use_special=False)  # Generate a random password
-
-            volume_path = self.volume_dir / name
             
             tool.create_volume(volume_path, volume_password, size)
 
@@ -155,7 +163,7 @@ class VolumeController:
                          and the second element is the mount path (empty if not mounted).
         """
         mount_path = self.mount_dir / name
-        if str(mount_path) in self._mount_cmd_result:
+        if f" {mount_path} " in self._mount_cmd_result:
             return True, str(mount_path)
         return False, ""
 
@@ -172,6 +180,8 @@ class VolumeController:
         volume_path = self.volume_dir / name
         if volume_path.is_dir() and Path(volume_path / "gocryptfs.conf").exists():
             return "gocryptfs"
+        elif str(volume_path).endswith(".hc"):
+            return "veracrypt"
         else:
             print_debug(f"Unable to detect volume type for '{name}'", False)
         return "unknown"

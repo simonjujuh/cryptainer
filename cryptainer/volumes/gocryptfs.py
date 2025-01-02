@@ -31,7 +31,7 @@ class GocryptfsTool(VolumeTool):
 
         # Ensure the volume exists
         if not volume_path.exists():
-            raise FileNotFoundError(f"Volume {volume_path}' does not exist")
+            raise FileNotFoundError(f"Volume {volume_path} does not exist")
 
         # Ensure the mount directory exists
         os.makedirs(mount_path, exist_ok=True)
