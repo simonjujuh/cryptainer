@@ -8,7 +8,25 @@ Cryptainer is now a generic version that supports two standard tools for creatin
 
 ## Installation
 
-Soon...
+- Build and install the package
+
+```bash
+# build package
+python3 -m build
+
+# install the package
+pip3 install ./dist/cryptainer-$VERSION-py3-none-any.whl
+```
+
+- Optional: install auto completion (https://kislyuk.github.io/argcomplete/)
+
+```bash
+pip install argcomplete
+activate-global-python-argcomplete
+
+echo 'eval "$(register-python-argcomplete cryptainer)"' >> ~/.zshrc
+echo 'eval "$(register-python-argcomplete cryptainer)"' >> ~/.bashrc
+```
 
 ## Usage
 
@@ -33,27 +51,35 @@ mount_dir =  # path to the directory used as the base for mount points
 
 ### Common commands
 
-Display the list of volumes present in the configured volumes_dir directory. The type of volume is indicated, with detection based on the volume's extension (e.g., .gocrypt, .vcrypt, etc.).
+* Display the list of volumes present in the configured volumes_dir directory.
 
 ```bash
 cryptainer list
 ```
 
-Create an encrypted volume. The name must not include an extension or path. The tool automatically adds the appropriate extension based on the type.
+* Create an encrypted volume. The name must not include an extension or path. The tool automatically adds the appropriate extension based on the type.
 
 ```bash
 cryptainer create -t gocryptfs name # -s is ignored for gocryptfs
 cryptainer create -t veracrypt -s 10G name 
 ```
 
-Mount an encrypted volume. Auto-completion via <TAB><TAB> can be enabled.
+* Mount an encrypted volume. Auto-completion via <TAB><TAB> can be enabled.
 
 ```bash
-cryptainer mount $volume_1 $volume_2 $volume_3
+cryptainer mount name1 name2 name3
 ```
 
-Unmount an encrypted volume. Auto-completion via <TAB><TAB> can be enabled.
+* Unmount an encrypted volume. Auto-completion via <TAB><TAB> can be enabled.
 
 ```bash
-cryptainer umount $volume_1 $volume_2 $volume_3
+cryptainer umount name1 name2 name3
 ```
+
+### Volume type detection
+
+To detect volumes is complex, and the possibilities vary depending on the type of container. Here are the detection rules that have been implemented:
+
+- gocryptfs container: The container is a directory with a gocryptfs.conf file inside.
+- veracrypt container: The container is a file, and it ends with the .hc extension.
+    - Veracrypt containers are problematic, as highlighted in this report: https://www.raedts.biz/forensics/detecting-truecrypt-veracrypt-volumes/

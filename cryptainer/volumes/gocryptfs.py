@@ -14,7 +14,7 @@ class GocryptfsTool(VolumeTool):
             raise FileExistsError(f"Volume {volume_path} already exists")
 
         # Ensure the volume directory exists
-        os.makedirs(volume_path, exist_ok=True)
+        os.makedirs(volume_path)
 
         subprocess.run(
             ["gocryptfs", "-q", "-init", "-passfile", "/dev/stdin", str(volume_path)],
@@ -32,9 +32,12 @@ class GocryptfsTool(VolumeTool):
         # Ensure the volume exists
         if not volume_path.exists():
             raise FileNotFoundError(f"Volume {volume_path} does not exist")
-
+        
         # Ensure the mount directory exists
-        os.makedirs(mount_path, exist_ok=True)
+        if mount_path.exists():
+            raise FileExistsError(f"Target directory {mount_path} already exists")
+        
+        os.makedirs(mount_path)
 
         # Mount the Gocryptfs volume
         subprocess.run(
