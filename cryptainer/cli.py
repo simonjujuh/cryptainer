@@ -40,7 +40,7 @@ def main():
     parser_create = subparsers.add_parser("create", help="Create a new volume")
     parser_create.add_argument("-t", "--type", required=True, choices=supported_volume_types, help="Volume type")
     parser_create.add_argument("-s", "--size", required=False, help="Volume size (veracrypt-only)")
-    parser_create.add_argument("--auto-mount", required=False, action="store_true", help="Mount the volume after creation")
+    parser_create.add_argument("-a", "--auto-mount", required=False, action="store_true", help="Mount the volume after creation")
     parser_create.add_argument("name", help="Encrypted volume name")
 
     # Command: mount
@@ -66,7 +66,7 @@ def main():
         sys.exit(1)
 
     if args.command == 'create':
-        controller.create_volume(args.type, args.name)
+        controller.create_volume(args.type, args.name, args.size, args.auto_mount)
     elif args.command == 'mount':
         controller.mount_volume(args.name)
     elif args.command == 'unmount':

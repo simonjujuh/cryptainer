@@ -56,7 +56,7 @@ class VolumeController:
         print()
         print(tabulate(volumes_data, headers=volumes_headers, tablefmt=""))
 
-    def create_volume(self, volume_type: str, name: str, password: str = None, size: str = None):
+    def create_volume(self, volume_type: str, name: str, size: str = None, auto_mount: bool = False, password: str = None):
         """
         Create a new encrypted volume.
 
@@ -70,16 +70,26 @@ class VolumeController:
 
         try:
             tool = self.tools[volume_type]
-            volume_password = generate_password(30, use_special=False)  # Generate a random password
+
+            # Get password from args, or generate it
+            if password:
+                volume_password = password
+            else:
+                volume_password = generate_password(30, use_special=False)  # Generate a random password
+
             volume_path = self.volume_dir / name
             
             tool.create_volume(volume_path, volume_password, size)
 
             print_success(f"Volume successfully created with password: {volume_password}")
+
+            if auto_mount:
+                self.mount_volume(name, password=volume_password)
+        
         except Exception as e:
             print_error(e)
 
-    def mount_volume(self, name: str):
+    def mount_volume(self, name: str, password: str = None):
         """
         Mount an existing volume.
 
@@ -94,9 +104,14 @@ class VolumeController:
             return
 
         try:
-            volume_password = prompt(f"Enter password for {name}: ")
             tool = self.tools.get(volume_type)
 
+            # Get password from args, or generate it
+            if password:
+                volume_password = password
+            else:
+                volume_password = generate_password(30, use_special=False)  # Generate a random password
+            
             mount_path = self.mount_dir / name
             volume_path = self.volume_dir / name
 
