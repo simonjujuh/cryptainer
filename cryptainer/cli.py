@@ -30,13 +30,13 @@ def main():
 
     # Create the main parser
     parser = argparse.ArgumentParser(prog="cryptainer", description="Manage encrypted volumes")
-    parser.add_argument("-c", "--cleanup", action="store_true", help="Cleanup empty folders in mount directory")
+    parser.add_argument("--no-cleanup", action="store_true", default=False, help="Do not clean empty folders in mount directory")
 
     subparsers = parser.add_subparsers(title="Commands", dest="command")
 
     # Command: list
     parser_list = subparsers.add_parser("list", help="List available encrypted volumes")
-    parser_list.add_argument("--show-unknown", action="store_true", help="Show volumes with unknown types")
+    parser_list.add_argument("--all", action="store_true", help="Show volumes with unknown types")
 
     # Command: create
     parser_create = subparsers.add_parser("create", help="Create a new volume")
@@ -63,12 +63,12 @@ def main():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
-    if not args.command and not args.cleanup:
+    if not args.no_cleanup:
+        controller.cleanup()
+
+    if not args.command:
         parser.print_help()
         sys.exit(1)
-
-    if args.cleanup:
-        controller.cleanup()
 
     if args.command == 'create':
         if args.type == 'veracrypt' and not args.size:
@@ -82,7 +82,7 @@ def main():
         for name in args.name:
             controller.unmount_volume(name)
     elif args.command == 'list':
-        controller.list_volumes(args.show_unknown)
+        controller.list_volumes(args.all)
     else:
         pass
 

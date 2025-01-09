@@ -71,8 +71,10 @@ class VolumeController:
             size (str, optional): Size of the volume (if applicable to the tool).
         """
         # add veracrypt extension for detection
-        if volume_type == 'veracrypt'and not str(name).endswith('.hc'):
-            name = f"{name}.hc"
+        if volume_type == 'veracrypt' and not str(name).endswith('.hc'):
+            # name = f"{name}.hc"
+            print_error(f"{volume_type} volumes must ends with '.hc'")
+            return
 
         print_info(f"Creating {volume_type} volume: {name}")
 
