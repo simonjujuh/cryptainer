@@ -224,3 +224,25 @@ class VolumeController:
         except Exception as e:
             print_error(f"Error checking mount status: {e}")
             return ""
+
+    def cleanup(self):
+        # Iterate through directories in the mount path
+        for directory in (d for d in self.mount_dir.iterdir() if d.is_dir()):
+            # Skip directories that are still mounted
+            if self.is_mounted(directory.name)[0]:
+                continue
+
+            # Check if the directory is empty
+            if any(directory.iterdir()):
+                continue
+
+            # Prompt the user to delete the residual folder
+            while True:
+                user_input = prompt(f"'{directory}' is a residual folder. Do you want to delete it? [y/N] ").strip().lower()
+                if user_input == 'y':
+                    directory.rmdir()
+                    print_success(f"'{directory}' deleted")
+                    break
+                elif user_input in {'n', ''}:
+                    print_info(f"'{directory}' not deleted")
+                    break

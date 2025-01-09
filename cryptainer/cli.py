@@ -30,6 +30,8 @@ def main():
 
     # Create the main parser
     parser = argparse.ArgumentParser(prog="cryptainer", description="Manage encrypted volumes")
+    parser.add_argument("-c", "--cleanup", action="store_true", help="Cleanup empty folders in mount directory")
+
     subparsers = parser.add_subparsers(title="Commands", dest="command")
 
     # Command: list
@@ -61,9 +63,12 @@ def main():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
-    if not args.command:
+    if not args.command and not args.cleanup:
         parser.print_help()
         sys.exit(1)
+
+    if args.cleanup:
+        controller.cleanup()
 
     if args.command == 'create':
         if args.type == 'veracrypt' and not args.size:
