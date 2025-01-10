@@ -83,3 +83,16 @@ To detect volumes is complex, and the possibilities vary depending on the type o
 - gocryptfs container: The container is a directory with a gocryptfs.conf file inside.
 - veracrypt container: The container is a file, and it ends with the .hc extension.
     - Veracrypt containers are problematic, as highlighted in this report: https://www.raedts.biz/forensics/detecting-truecrypt-veracrypt-volumes/
+
+
+## TODO
+
+- [x] Implement auto-mount  
+- [x] Implement mounting and unmounting of multiple volumes  
+- [x] Implement VeraCrypt containers  
+- [ ] Implement the pruning feature  
+- [x] Implement the autoclean feature  
+- [x] Implement bash or zsh completion  
+- [x] Implement a Keepass module  
+- [x] Add the installation procedure  
+- [x] Harmonize code understanding, particularly regarding paths and project names  
