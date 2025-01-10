@@ -4,8 +4,7 @@ from pathlib import Path
 from cryptainer.log import *
 from cryptainer.config import load_config
 from cryptainer.controller import VolumeController
-from cryptainer.password import generate_password
-from cryptainer.volumes.gocryptfs import GocryptfsTool
+from cryptainer.keepass import KeepassManager
 
 # Supported volume types
 supported_volume_types = ['gocryptfs', 'veracrypt']
@@ -31,7 +30,7 @@ def main():
     # Create the main parser
     parser = argparse.ArgumentParser(prog="cryptainer", description="Manage encrypted volumes")
     parser.add_argument("--no-cleanup", action="store_true", default=False, help="Do not clean empty folders in mount directory")
-
+    
     subparsers = parser.add_subparsers(title="Commands", dest="command")
 
     # Command: list
@@ -43,10 +42,12 @@ def main():
     parser_create.add_argument("-t", "--type", required=True, choices=supported_volume_types, help="Volume type")
     parser_create.add_argument("-s", "--size", required=False, help="Volume size (veracrypt-only)")
     parser_create.add_argument("-a", "--auto-mount", required=False, action="store_true", help="Mount the volume after creation")
+    parser_create.add_argument("-k", "--use-keepass", action="store_true", help="Use keepass database to store or fetch secrets")
     parser_create.add_argument("name", help="Encrypted volume name")
 
     # Command: mount
     parser_mount = subparsers.add_parser("mount", help="Mount an encrypted volume")
+    parser_mount.add_argument("-k", "--use-keepass", action="store_true", help="Use keepass database to store or fetch secrets")
     if completion:
         parser_mount.add_argument("name", type=str, nargs='+', help="Encrypted volume name", choices=controller.get_unmounted_volumes())
     else:
@@ -71,13 +72,47 @@ def main():
         sys.exit(1)
 
     if args.command == 'create':
+
         if args.type == 'veracrypt' and not args.size:
             print_error("--size option is required when using veracrypt containers")
             return
-        controller.create_volume(args.type, args.name, args.size, args.auto_mount)
+        
+        # Instanciate the keepass manager
+        if args.use_keepass:
+            keyfile = config.get("keepass", "keyfile") or None
+
+            try:
+                kpm = KeepassManager(
+                    config.get("keepass", "database"),
+                    keyfile
+                )
+            except Exception as e:
+                print_error(f"Failed to initialize KeepassManager: {e}")
+                kpm = None
+        
+        controller.create_volume(args.type, 
+                                 args.name, 
+                                 args.size, 
+                                 args.auto_mount, 
+                                 keepass_manager=kpm)
+    
     elif args.command == 'mount':
+
+        # Instanciate the keepass manager
+        if args.use_keepass:
+            keyfile = config.get("keepass", "keyfile") or None
+
+            try:
+                kpm = KeepassManager(
+                    config.get("keepass", "database"),
+                    keyfile
+                )
+            except Exception as e:
+                print_error(f"Failed to initialize KeepassManager: {e}")
+                kpm = None
+
         for name in args.name:
-            controller.mount_volume(name)
+            controller.mount_volume(name, keepass_manager=kpm)
     elif args.command == 'unmount':
         for name in args.name:
             controller.unmount_volume(name)

@@ -85,7 +85,7 @@ class VolumeController:
         print()
         print(tabulate(volumes_data, headers=volumes_headers, tablefmt=""))
 
-    def create_volume(self, volume_type: str, name: str, size: str = None, auto_mount: bool = False, password: str = None):
+    def create_volume(self, volume_type: str, name: str, size: str = None, auto_mount: bool = False, password: str = None, keepass_manager = None):
         """
         Create a new encrypted volume.
 
@@ -118,13 +118,26 @@ class VolumeController:
 
             print_success(f"Volume successfully created with password: {volume_password}")
 
+            if keepass_manager:
+                # prompt master key
+                master_key = prompt("Enter the master password for Keepass: ")
+                keepass_manager.open_database(master_key)
+
+                keepass_manager.add_or_update_entry(
+                    title=name,
+                    username=str(volume_path),
+                    password=volume_password,
+                )
+
+                keepass_manager.save_database()
+
             if auto_mount:
                 self.mount_volume(name, password=volume_password)
         
         except Exception as e:
             print_error(e)
 
-    def mount_volume(self, name: str, password: str = None):
+    def mount_volume(self, name: str, password: str = None, keepass_manager = None):
         """
         Mount an existing volume.
 
@@ -141,8 +154,13 @@ class VolumeController:
         try:
             tool = self.tools.get(volume_type)
 
+            if keepass_manager:
+                # prompt master key
+                master_key = prompt("Enter the master password for Keepass: ")
+                keepass_manager.open_database(master_key)
+                volume_password = keepass_manager.fetch_entry(name)
             # Get password from args, or generate it
-            if password:
+            elif password:
                 volume_password = password
             else:
                 volume_password = prompt(f"Enter password for {name}: ")

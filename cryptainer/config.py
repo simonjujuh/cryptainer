@@ -54,8 +54,8 @@ def expand_and_validate_paths(config):
         ("volumes", "volumes_dir"),
         ("volumes", "mount_dir"),
         # ("template", "template_path"),
-        # ("keepass", "database"),
-        # ("keepass", "keyfile")
+        ("keepass", "database"),
+        ("keepass", "keyfile")
     ]
 
     for section, option in paths_to_validate:
