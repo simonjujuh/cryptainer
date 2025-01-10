@@ -71,7 +71,7 @@ class VolumeController:
         print_info(f"Available volumes ({self.volume_dir})")
 
         # Iterate over all items in the volume directory, sorted by creation date
-        for item in sorted(self.volume_dir.iterdir(), key=lambda x: x.stat().st_ctime):
+        for item in sorted(self.volume_dir.iterdir(), key=lambda x: x.name):# stat().st_ctime):
             volume_name = self._path_to_name(item)
             is_mounted, mount_path = self.is_mounted(volume_name)
             volume_type = self.detect_volume_type(volume_name)
