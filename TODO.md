@@ -8,4 +8,4 @@
 - [x] Implémenter la completion bash ou zsh
 - [ ] Implémenter un module keepass
 - [ ] Ajouter la procédure d'installation
-- [ ] Harmoniser la compréhension du code, notamment sur les path et les noms de projets
+- [x] Harmoniser la compréhension du code, notamment sur les path et les noms de projets

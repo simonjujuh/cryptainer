@@ -14,8 +14,6 @@ class VolumeController:
     A controller class to manage encrypted volumes using various tools (e.g., gocryptfs).
     """
 
-    VOLUMES_META_FILE = DEFAULT_CONFIG_DIR / 'volumes.json'
-
     def __init__(self, volume_dir: str, mount_dir: str):
         """
         Initialize the VolumeController.
@@ -34,6 +32,32 @@ class VolumeController:
             "veracrypt": VeraCryptTool()
         }
 
+
+    def _name_to_path(self, name: str, base_dir: Path = None) -> Path:
+        """
+        Convert a volume name to its full path.
+        Args:
+            name (str): The name of the volume.
+            base_dir (Path): The base directory (volume_dir or mount_dir).
+        
+        Returns:
+            Path: The full path to the volume.
+        """
+        base_dir = base_dir or self.volume_dir
+        return base_dir / name
+
+    def _path_to_name(self, path: Path) -> str:
+        """
+        Extract the name of a volume from its full path.
+
+        Args:
+            path (Path): The full path to the volume.
+
+        Returns:
+            str: The name of the volume.
+        """
+        return path.name
+
     def list_volumes(self, show_unknown_fs: bool = False):
         """
         List all volumes in the volume directory, showing their status (mounted/unmounted).
@@ -48,12 +72,13 @@ class VolumeController:
 
         # Iterate over all items in the volume directory, sorted by creation date
         for item in sorted(self.volume_dir.iterdir(), key=lambda x: x.stat().st_ctime):
-            is_mounted, mount_path = self.is_mounted(item.name)
-            volume_type = self.detect_volume_type(item.name)
+            volume_name = self._path_to_name(item)
+            is_mounted, mount_path = self.is_mounted(volume_name)
+            volume_type = self.detect_volume_type(volume_name)
 
             if volume_type != 'unknown' or show_unknown_fs:
                 volumes_data.append([
-                    item.name, volume_type, is_mounted, mount_path
+                    volume_name, volume_type, is_mounted, mount_path
                 ])
 
         # Display the results in a tabular format
@@ -78,7 +103,7 @@ class VolumeController:
 
         print_info(f"Creating {volume_type} volume: {name}")
 
-        volume_path = self.volume_dir / name
+        volume_path = self._name_to_path(name)
         
         try:
             tool = self.tools[volume_type]
@@ -122,8 +147,8 @@ class VolumeController:
             else:
                 volume_password = prompt(f"Enter password for {name}: ")
             
-            mount_path = self.mount_dir / name
-            volume_path = self.volume_dir / name
+            volume_path = self._name_to_path(name)
+            mount_path = self._name_to_path(name, base_dir=self.mount_dir)
 
             tool.mount_volume(volume_path, mount_path, volume_password)
             print_success(f"Volume {name} mounted at '{mount_path}'")
@@ -146,7 +171,7 @@ class VolumeController:
 
         try:
             tool = self.tools.get(volume_type)
-            mount_path = self.mount_dir / name
+            mount_path = self._name_to_path(name, base_dir=self.mount_dir)
 
             tool.unmount_volume(mount_path)
             print_success(f"Volume '{name}' unmounted and mount directory removed")
@@ -179,7 +204,7 @@ class VolumeController:
         Returns:
             str: The type of the volume (e.g., 'gocryptfs').
         """
-        volume_path = self.volume_dir / name
+        volume_path = self._name_to_path(name)
         if volume_path.is_dir() and Path(volume_path / "gocryptfs.conf").exists():
             return "gocryptfs"
         elif str(volume_path).endswith(".hc"):
