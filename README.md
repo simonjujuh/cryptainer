@@ -6,19 +6,33 @@ This tool was initially designed to accommodate the preferences of various penet
 
 Cryptainer is now a generic version that supports two standard tools for creating encrypted volumes, but its code structure makes it easy to support additional tools.
 
-## Installation
+## Dependencies
 
-- Build and install the package
+This tool currently support two encrypted systems; *veracrypt* and *gocryptfs*.
+
+### Install Veracrypt
+
+* https://linuxcapable.com/install-veracrypt-on-ubuntu-linux/
+
+### Install gocryptfs
+
+* Install gocryptfs using your package manager
+
+Ensure the following option is enabled in your `/etc/fuse.conf` file:
 
 ```bash
-# build package
-python3 -m build
-
-# install the package
-pip3 install ./dist/cryptainer-$VERSION-py3-none-any.whl
+user_allow_other
 ```
 
-- Optional: install auto completion (https://kislyuk.github.io/argcomplete/)
+## Installation
+
+* Install the package
+
+```bash
+pipx install .
+```
+
+* Optional: install auto completion (https://kislyuk.github.io/argcomplete/)
 
 ```bash
 pip install argcomplete
