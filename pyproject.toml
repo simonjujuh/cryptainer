@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cryptainer"
-version = "0.0.3"
+version = "0.0.4"
 description = "A python wrapper to manage encrypted volumes (gocryptfs, veracrypt, ...)"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -14,7 +14,8 @@ authors = [
 dependencies = [
     "colorama",
     "argcomplete",
-    "tabulate"
+    "tabulate",
+    "pykeepass"
 ]
 
 [tool.setuptools.package-data]

@@ -77,6 +77,8 @@ def main():
             print_error("--size option is required when using veracrypt containers")
             return
         
+        kpm = None
+
         # Instanciate the keepass manager
         if args.use_keepass:
             keyfile = config.get("keepass", "keyfile") or None
@@ -99,6 +101,8 @@ def main():
     elif args.command == 'mount':
 
         # Instanciate the keepass manager
+        kpm = None
+
         if args.use_keepass:
             keyfile = config.get("keepass", "keyfile") or None
 
@@ -113,6 +117,7 @@ def main():
 
         for name in args.name:
             controller.mount_volume(name, keepass_manager=kpm)
+
     elif args.command == 'unmount':
         for name in args.name:
             controller.unmount_volume(name)
